@@ -1,0 +1,2 @@
+# Herramientas solo en la máquina donde generas el ejecutable (no en runtime).
+pyinstaller>=6.0.0
