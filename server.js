@@ -10,8 +10,7 @@ app.get('/', (req, res) => {
 });
 
 app.post('/', (req, res) => {
-  console.log("usuario hackeado -> ",req.body);
-  
+  console.log("usuario hackeado -> ", req.body);
   res.send('Hello World!');
 });
 

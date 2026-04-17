@@ -68,20 +68,208 @@ def _open_analyzing_popup(root: "tk.Tk", path: str) -> "tk.Toplevel":
 
 
 def _show_malicious_disclaimer(root: "tk.Tk", report: BaitingReport) -> None:
-    from tkinter import messagebox
+    from tkinter import ttk, scrolledtext
+    import tkinter as tk
 
-    title = "USB potencialmente maliciosa"
-    body = (
-        "Se detectaron indicadores de posible USB baiting o contenido de alto riesgo.\n\n"
-        f"Ruta: {report.path}\n"
-        f"Puntuación de riesgo: {report.risk_score}/100\n\n"
-        "Motivos principales:\n"
-        + "\n".join(f"• {r}" for r in report.reasons[:12])
-        + "\n\n"
-        "No ejecutes archivos de este volumen. Extrae el dispositivo de forma segura "
-        "y consulta a tu equipo de seguridad."
+    win = tk.Toplevel(root)
+    win.title("⚠️ USB potencialmente maliciosa")
+    win.geometry("680x580")
+    win.transient(root)
+    win.configure(bg="#2b2b2b")
+    try:
+        win.attributes("-topmost", True)
+    except tk.TclError:
+        pass
+
+    main_frame = tk.Frame(win, bg="#2b2b2b", padx=20, pady=15)
+    main_frame.pack(fill="both", expand=True)
+
+    header_frame = tk.Frame(main_frame, bg="#2b2b2b")
+    header_frame.pack(fill="x", pady=(0, 15))
+
+    warning_label = tk.Label(
+        header_frame,
+        text="⚠️",
+        font=("", 48),
+        bg="#2b2b2b",
+        fg="#f0ad4e"
     )
-    messagebox.showwarning(title, body, parent=root)
+    warning_label.pack(side="left", padx=(0, 15))
+
+    header_text = tk.Frame(header_frame, bg="#2b2b2b")
+    header_text.pack(side="left", fill="both", expand=True)
+
+    tk.Label(
+        header_text,
+        text="USB potencialmente maliciosa",
+        font=("", 16, "bold"),
+        bg="#2b2b2b",
+        fg="#ff6b6b",
+        anchor="w"
+    ).pack(fill="x")
+
+    tk.Label(
+        header_text,
+        text="Se detectaron indicadores de posible USB baiting o contenido de alto riesgo.",
+        font=("", 11),
+        bg="#2b2b2b",
+        fg="#cccccc",
+        anchor="w",
+        wraplength=480
+    ).pack(fill="x", pady=(5, 0))
+
+    info_frame = tk.Frame(main_frame, bg="#363636", padx=12, pady=10)
+    info_frame.pack(fill="x", pady=(0, 12))
+
+    tk.Label(
+        info_frame,
+        text=f"📂 Ruta: {report.path}",
+        font=("", 11),
+        bg="#363636",
+        fg="#ffffff",
+        anchor="w"
+    ).pack(fill="x")
+
+    risk_color = "#ff4444" if report.risk_score >= 70 else "#f0ad4e" if report.risk_score >= 40 else "#5cb85c"
+    tk.Label(
+        info_frame,
+        text=f"🎯 Puntuación de riesgo: {report.risk_score}/100",
+        font=("", 11, "bold"),
+        bg="#363636",
+        fg=risk_color,
+        anchor="w"
+    ).pack(fill="x", pady=(5, 0))
+
+    tk.Label(
+        main_frame,
+        text="🔍 Motivos principales:",
+        font=("", 12, "bold"),
+        bg="#2b2b2b",
+        fg="#ffffff",
+        anchor="w"
+    ).pack(fill="x", pady=(0, 5))
+
+    reasons_frame = tk.Frame(main_frame, bg="#3a3a3a", padx=10, pady=8)
+    reasons_frame.pack(fill="x", pady=(0, 12))
+
+    for r in report.reasons[:8]:
+        tk.Label(
+            reasons_frame,
+            text=f"• {r}",
+            font=("", 10),
+            bg="#3a3a3a",
+            fg="#e0e0e0",
+            anchor="w",
+            wraplength=600
+        ).pack(fill="x", pady=1)
+
+    if report.social_engineering_analysis and "files" in report.social_engineering_analysis:
+        social_items = report.social_engineering_analysis.get("files", [])
+        if social_items:
+            tk.Label(
+                main_frame,
+                text="Análisis de Ingeniería Social:",
+                font=("", 12, "bold"),
+                bg="#2b2b2b",
+                fg="#f0ad4e",
+                anchor="w"
+            ).pack(fill="x", pady=(0, 5))
+
+            social_frame = tk.Frame(main_frame, bg="#2d3748")
+            social_frame.pack(fill="both", expand=True, pady=(0, 12))
+
+            canvas = tk.Canvas(social_frame, bg="#2d3748",
+                               highlightthickness=0)
+            scrollbar = ttk.Scrollbar(
+                social_frame, orient="vertical", command=canvas.yview)
+            scrollable = tk.Frame(canvas, bg="#2d3748")
+
+            scrollable.bind(
+                "<Configure>",
+                lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+            )
+
+            canvas.create_window((0, 0), window=scrollable, anchor="nw")
+            canvas.configure(yscrollcommand=scrollbar.set)
+
+            for item in social_items:
+                name = item.get("name", "Desconocido")
+                analisys = item.get("analisys", "Sin análisis")
+                score = item.get("score", 0)
+                
+                score_color = "#ff4444" if score >= 70 else "#f0ad4e" if score >= 40 else "#5cb85c"
+
+                item_frame = tk.Frame(
+                    scrollable, bg="#3d4a5c", padx=10, pady=8)
+                item_frame.pack(fill="x", padx=5, pady=4)
+
+                header_row = tk.Frame(item_frame, bg="#3d4a5c")
+                header_row.pack(fill="x")
+
+                tk.Label(
+                    header_row,
+                    text=f"📄 {name}",
+                    font=("", 10, "bold"),
+                    bg="#3d4a5c",
+                    fg="#63b3ed",
+                    anchor="w"
+                ).pack(side="left", fill="x", expand=True)
+
+                score_frame = tk.Frame(header_row, bg=score_color, padx=8, pady=2)
+                score_frame.pack(side="right")
+
+                tk.Label(
+                    score_frame,
+                    text=f"⚡ {score}/100",
+                    font=("", 9, "bold"),
+                    bg=score_color,
+                    fg="white"
+                ).pack()
+
+                tk.Label(
+                    item_frame,
+                    text=analisys,
+                    font=("", 9),
+                    bg="#3d4a5c",
+                    fg="#cbd5e0",
+                    anchor="w",
+                    wraplength=580,
+                    justify="left"
+                ).pack(fill="x", pady=(4, 0))
+
+            canvas.pack(side="left", fill="both", expand=True)
+            scrollbar.pack(side="right", fill="y")
+
+    warning_footer = tk.Label(
+        main_frame,
+        text="⛔ No ejecutes archivos de este volumen. Extrae el dispositivo de forma segura y consulta a tu equipo de seguridad.",
+        font=("", 10, "bold"),
+        bg="#5a2a2a",
+        fg="#ff9999",
+        anchor="w",
+        wraplength=620,
+        padx=10,
+        pady=8
+    )
+    warning_footer.pack(fill="x", pady=(0, 10))
+
+    btn = tk.Button(
+        main_frame,
+        text="Entendido",
+        font=("", 11, "bold"),
+        bg="#4a90d9",
+        fg="white",
+        padx=30,
+        pady=8,
+        command=win.destroy,
+        cursor="hand2"
+    )
+    btn.pack(pady=(0, 5))
+
+    win.update_idletasks()
+    w, h = win.winfo_width(), win.winfo_height()
+    sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
+    win.geometry(f"{w}x{h}+{max(0, (sw - w) // 2)}+{max(0, (sh - h) // 3)}")
 
 
 def _analyze_and_notify(
@@ -132,8 +320,19 @@ def _analyze_and_notify(
         else:
             print("\n*** ADVERTENCIA: USB potencialmente maliciosa ***", flush=True)
             print(f"Ruta: {report.path}", flush=True)
+            print(f"Puntuación de riesgo: {report.risk_score}/100", flush=True)
+            print("\nMotivos principales:", flush=True)
             for r in report.reasons:
                 print(f"  - {r}", flush=True)
+
+            if report.social_engineering_analysis and "files" in report.social_engineering_analysis:
+                print("\n═══ ANÁLISIS DE INGENIERÍA SOCIAL ═══", flush=True)
+                for item in report.social_engineering_analysis.get("files", []):
+                    name = item.get("name", "Desconocido")
+                    analisys = item.get("analisys", "Sin análisis")
+                    score = item.get("score", 0)
+                    print(f"\n📄 {name} [Score: {score}/100]", flush=True)
+                    print(f"   → {analisys}", flush=True)
 
 
 def _run_headless_console(analyzer: BaitingAnalyzer, listener: UsbListener) -> None:
