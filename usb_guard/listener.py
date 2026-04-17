@@ -5,11 +5,9 @@ from typing import Callable, Optional
 
 
 VolumeCallback = Callable[[str], None]
-"""Callback con la ruta raíz del volumen (ej. /Volumes/Nombre o E:\\)."""
 
 
 class UsbListener(ABC):
-    """Interfaz común: notifica cuando se monta un volumen extraíble."""
 
     def __init__(self) -> None:
         self._on_volume_mounted: Optional[VolumeCallback] = None

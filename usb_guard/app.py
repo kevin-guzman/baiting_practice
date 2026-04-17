@@ -56,7 +56,10 @@ def _open_analyzing_popup(root: "tk.Tk", path: str) -> "tk.Toplevel":
         justify="center",
     ).pack(anchor="center", pady=(6, 0))
     short = path if len(path) < 72 else path[:36] + "…" + path[-32:]
-    ttk.Label(frm, text=short, font=("TkFixedFont", 9)).pack(anchor="center", pady=(10, 0))
+    ttk.Label(frm,
+              text=short,
+              font=("TkFixedFont", 9)
+              ).pack(anchor="center", pady=(10, 0))
     win.update_idletasks()
     w, h = win.winfo_reqwidth(), win.winfo_reqheight()
     sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
@@ -175,7 +178,6 @@ def run() -> None:
     except ImportError:
         logger.warning(
             "tkinter no está instalado; modo solo consola. "
-            "En macOS: instala python-tk (Homebrew) o usa python.org."
         )
         _run_headless_console(analyzer, listener)
         return
@@ -217,7 +219,8 @@ def run() -> None:
     listbox.pack(side="left", fill="both", expand=True)
     scroll.config(command=listbox.yview)
 
-    status = tk.StringVar(value="Monitor activo: se analizarán automáticamente los nuevos volúmenes.")
+    status = tk.StringVar(
+        value="Monitor activo: se analizarán automáticamente los nuevos volúmenes.")
 
     def refresh_volume_list() -> None:
         listbox.delete(0, tk.END)

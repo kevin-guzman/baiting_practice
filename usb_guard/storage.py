@@ -6,7 +6,6 @@ from pathlib import Path
 
 
 def get_removable_volume_paths() -> set[str]:
-    """Rutas raíz de volúmenes extraíbles montados (Windows: letras; macOS: /Volumes/…)."""
     if sys.platform == "win32":
         return _win_removable_paths()
     if sys.platform == "darwin":
@@ -21,7 +20,7 @@ def _win_removable_paths() -> set[str]:
     out: set[str] = set()
     DRIVE_REMOVABLE = 2
     try:
-        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+        kernel32 = ctypes.windll.kernel32
         mask = kernel32.GetLogicalDrives()
         for i, letter in enumerate(string.ascii_uppercase):
             if not (mask & (1 << i)):
@@ -73,7 +72,8 @@ def _win_is_removable_drive(p: Path) -> bool:
         root = f"{p.drive}\\" if p.drive else str(p)
         if len(root) < 2 or root[1] != ":":
             return False
-        t = ctypes.windll.kernel32.GetDriveTypeW(root)  # type: ignore[attr-defined]
+        t = ctypes.windll.kernel32.GetDriveTypeW(
+            root)  # type: ignore[attr-defined]
         return t == DRIVE_REMOVABLE
     except OSError:
         return False
